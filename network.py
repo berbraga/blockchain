@@ -5,6 +5,7 @@ import threading
 import traceback
 from typing import Callable, Dict, List
 from block import Block, create_block_from_dict, hash_block
+from chain import valid_chain, save_chain
 
 
 def list_peers(fpath: str):
@@ -53,6 +54,22 @@ def broadcast_transaction(tx: Dict, peers_fpath: str, port: int):
             )
 
 
+def request_chain(peer: str, port: int) -> List[Dict]:
+    """Solicita a blockchain completa de um peer."""
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(5)
+        s.connect((peer, port))
+        s.send(json.dumps({"type": "get_chain"}).encode())
+        data = s.recv(65536).decode()
+        msg = json.loads(data)
+        if msg["type"] == "chain":
+            return msg["data"]
+    except Exception as e:
+        print(f"[REQUEST_CHAIN] Erro ao requisitar chain de {peer}: {e}")
+    return []
+
+
 def handle_client(
     conn: socket.socket,
     addr: str,
@@ -63,7 +80,7 @@ def handle_client(
     on_valid_block_callback: Callable,
 ):
     try:
-        data = conn.recv(4096).decode()
+        data = conn.recv(65536).decode()
         msg = json.loads(data)
         if msg["type"] == "block":
             block = create_block_from_dict(msg["data"])
@@ -77,12 +94,19 @@ def handle_client(
                 on_valid_block_callback(blockchain_fpath, blockchain)
                 print(f"[✓] New valid block added from {addr}")
             else:
-                print(f"[!] Invalid block received from {addr}")
+                print(f"[!] Invalid block received from {addr}. Tentando resolver fork...")
+                # Fork detectado: requisitar cadeias dos peers e adotar a mais longa válida
+                from chain import replace_chain_with_longest
+                replace_chain_with_longest(blockchain, blockchain_fpath, difficulty)
         elif msg["type"] == "tx":
             tx = msg["data"]
             if tx not in transactions:
                 transactions.append(tx)
                 print(f"[+] Transaction received from {addr}")
+        elif msg["type"] == "get_chain":
+            # Envia a blockchain local serializada
+            chain_data = [b.as_dict() for b in blockchain]
+            conn.send(json.dumps({"type": "chain", "data": chain_data}).encode())
     except Exception as e:
         print(
             f"Exception when hadling client. Exception: {e}. {traceback.format_exc()}"

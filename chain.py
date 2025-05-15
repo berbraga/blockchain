@@ -3,7 +3,7 @@ import os
 from typing import List
 
 from block import Block, create_block, create_block_from_dict, create_genesis_block
-from network import broadcast_block, broadcast_transaction
+from network import broadcast_block, broadcast_transaction, list_peers, request_chain
 
 
 def load_chain(fpath: str) -> List[Block]:
@@ -30,7 +30,9 @@ def save_chain(fpath: str, chain: list[Block]):
 
 def valid_chain(chain):
     for i in range(1, len(chain)):
-        if chain[i]["prev_hash"] != chain[i - 1]["hash"]:
+        prev_hash = chain[i - 1]["hash"] if isinstance(chain[i - 1], dict) else chain[i - 1].hash
+        curr_prev_hash = chain[i]["prev_hash"] if isinstance(chain[i], dict) else chain[i].prev_hash
+        if curr_prev_hash != prev_hash:
             return False
     return True
 
@@ -85,3 +87,25 @@ def get_balance(node_id: str, blockchain: List[Block]) -> float:
 
 def on_valid_block_callback(fpath, chain):
     save_chain(fpath, chain)
+
+
+def replace_chain_with_longest(blockchain: list, blockchain_fpath: str, difficulty: int):
+    """Verifica as cadeias dos peers e substitui a local pela mais longa válida, se necessário."""
+    peers = list_peers('configs/peers.txt')
+    longest_chain = [b for b in blockchain]
+    for peer in peers:
+        peer_chain_data = request_chain(peer, 5002)  # Porta padrão
+        if peer_chain_data and len(peer_chain_data) > len(longest_chain):
+            # Validar a cadeia recebida
+            if valid_chain(peer_chain_data) and all(
+                b['hash'].startswith('0' * difficulty) for b in peer_chain_data[1:]
+            ):
+                print(f"[SYNC] Cadeia mais longa encontrada em {peer}. Substituindo a cadeia local.")
+                longest_chain = [create_block_from_dict(b) for b in peer_chain_data]
+    if len(longest_chain) > len(blockchain):
+        blockchain.clear()
+        blockchain.extend(longest_chain)
+        save_chain(blockchain_fpath, blockchain)
+        print("[SYNC] Cadeia local substituída pela mais longa.")
+    else:
+        print("[SYNC] Nenhuma cadeia mais longa válida encontrada.")
