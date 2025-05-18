@@ -5,7 +5,7 @@ import threading
 import traceback
 from typing import Callable, Dict, List
 from block import Block, create_block_from_dict, hash_block
-from chain import valid_chain, save_chain
+
 
 
 def list_peers(fpath: str):
