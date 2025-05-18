@@ -52,8 +52,10 @@ def mine_block(
     peers_fpath: str,
     port: int,
 ):
+    # Limitar a 10 transações por bloco (além da coinbase)
+    tx_to_include = transactions[:10]
     new_block = create_block(
-        transactions,
+        tx_to_include,
         blockchain[-1].hash,
         miner=node_id,
         index=len(blockchain),
@@ -61,7 +63,8 @@ def mine_block(
         difficulty=difficulty,
     )
     blockchain.append(new_block)
-    transactions.clear()
+    # Remover apenas as transações incluídas
+    del transactions[:len(tx_to_include)]
     save_chain(blockchain_fpath, blockchain)
     broadcast_block(new_block, peers_fpath, port)
     print(f"[✓] Block {new_block.index} mined and broadcasted.")
