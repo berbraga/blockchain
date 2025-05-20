@@ -116,4 +116,4 @@ Index: 4, Hash: 0000c1d2e3..., Tx: 1
 
 **Links:**
 - [Repositório no GitHub](https://github.com/berbraga/blockchain)
-- [Vídeo de apresentação](https://youtube.com/SEU_VIDEO) 
+- [Vídeo de apresentação](https://www.youtube.com/watch?v=SS0lFtlaD3k) 
