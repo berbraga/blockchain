@@ -21,7 +21,6 @@ Index: 2, Hash: 000087593f..., Tx: 1
 Index: 3, Hash: 0000b110ba..., Tx: 2
 Index: 3, Hash: 0000f190c7..., Tx: 2
 ```
-*Prints reais podem ser capturados durante o teste prático.*
 
 ---
 
@@ -63,7 +62,7 @@ Index: 2, Hash: 000087593f..., Tx: 1
 Index: 3, Hash: 0000b110ba..., Tx: 2
 Index: 4, Hash: 0000c1d2e3..., Tx: 1
 ```
-*Inclua prints reais do terminal após o teste prático.*
+
 
 ---
 
@@ -116,5 +115,5 @@ Index: 4, Hash: 0000c1d2e3..., Tx: 1
 ---
 
 **Links:**
-- [Repositório no GitHub](https://github.com/SEU_USUARIO/SEU_REPOSITORIO)
+- [Repositório no GitHub](https://github.com/berbraga/blockchain)
 - [Vídeo de apresentação](https://youtube.com/SEU_VIDEO) 
